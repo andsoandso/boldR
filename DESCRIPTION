@@ -1,0 +1,8 @@
+Package: boldR
+Title: boldR
+Description: A R package for plotting high-dimensional fMRI data. 
+Version: 0.0.1
+Authors@R: 'Erik Peterson <Erik.Exists@gmail.com> [aut, cre]'
+Depends: R (>= 2.15.2)
+License: BSD
+LazyData: true
