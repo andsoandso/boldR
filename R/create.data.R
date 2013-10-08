@@ -11,5 +11,7 @@ create.bolddf <- function(df, datarange, index, cond, dataname) {
 	
 	bolddf <- melt(bolddf, id.var = c("dataname", "cond", "index"))
 	colnames(bolddf) <- c("dataname", "cond", "index", "voxel", "data")
+    bolddf[["data"]] <- as.numeric(bolddf[["data"]])  ## Ensure not str
+    
 	bolddf
 }

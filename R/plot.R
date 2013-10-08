@@ -1,9 +1,10 @@
 library("ggplot2")
 library("reshape2")
 
-plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA, height=0, width=0){
-
+plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA, 
+        height=0, width=0, returnp=FALSE){
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
+    # else { dev.new(width=width, height=height) }
 
     if (is.na(seperate_by)){
         p <- ggplot(data=bolddf, 
@@ -48,39 +49,101 @@ plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA, height=0, widt
     } else {
         stop("Argument 'seperate_by' not recognized. Try NA, or 'dataname'.")
     }
-    dev.off()
+    if (! is.na(name)) { dev.off() }
+    if (returnp) {return(p) }
 }
 
-plot.bolddf.boxplot <- function(bolddf, name=NA, height=0, width=0){
+plot.bolddf.tc <- function(bolddf, name=NA, height=0, width=0, 
+            returnp=FALSE){
+    if(! is.na(name)){ .pdf.device.setup(name, height, width) }
+    # else { dev.new(width=width, height=height) }
+    
+    p <- ggplot(data=bolddf, aes(x=index, y=data, colour=cond, group=dataname)) +
+            geom_line(alpha=0.25) + 
+            facet_grid(voxel~cond) +
+            ylab("BOLD signal (AU)") + xlab("Time (TR)") + theme_bw() +
+            scale_x_continuous(breaks=1:max(bolddf$index)) +
+            
+            # Strip off all the boxes
+            theme(
+                plot.background = element_blank(),
+                # panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.border = element_blank(),
+                panel.background = element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks.y=element_blank(),
+                strip.text.y = element_text(angle=0)
+            ) 
+    
+    print(p)
+    if(! is.na(name)){ dev.off() }
+    if (returnp) { return(p) }
+}
+
+plot.bolddf.tcpoint <- function(bolddf, name=NA, height=0, width=0, 
+        returnp=FALSE){
+    if(! is.na(name)){ .pdf.device.setup(name, height, width) }
+    # else { dev.new(width=width, height=height) }
+    
+    p <- ggplot(data=bolddf, aes(x=index, y=data, colour=cond)) +
+            geom_point(alpha=0.25) +
+            facet_grid(voxel~cond) +
+            ylab("BOLD signal (AU)") + xlab("Time (TR)") + theme_bw() + 
+            scale_x_continuous(breaks=1:max(bolddf$index)) +
+
+            # Strip off all the boxes
+            theme(
+                plot.background = element_blank(),
+                panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.border = element_blank(),
+                panel.background = element_blank(),
+                axis.text.y=element_blank(),
+                axis.ticks.y=element_blank(),
+                strip.text.y = element_text(angle=0)
+            )
+    
+    print(p)
+    if(! is.na(name)){ dev.off() }
+    if (returnp) { return(p) }
+}
+
+
+plot.bolddf.boxplot <- function(bolddf, name=NA, seperate_by=NA, 
+        height=0, width=0, returnp=FALSE){
 # Plots timecourses for each voxel in a grid. Conds are separatly colored.
 
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
-
+    # else { dev.new(width=width, height=height) }
+    
     p <- ggplot(data=bolddf, aes(x=factor(index), y=data, fill=cond, 
             colour=cond))
     p <- p + geom_boxplot(alpha=0.5, outlier.colour="light grey")
-    p <- p + ylab("BOLD signal") + xlab("Index") + theme_bw()
-    p <- p + facet_wrap(~voxel, ncol=3)
-
-    if(! is.na(name)){
-        print(p)    
-        dev.off()
-    }
-    else{ return(p) }
+    p <- p + ylab("BOLD signal (AU)") + xlab("Index") + theme_bw()
+    
+    if (is.na(seperate_by)) { p <- p + facet_wrap(~voxel, ncol=3) }
+    else if (seperate_by == "cond") {p <- p + facet_grid(voxel~cond)}
+    else { stop("seperate_by was not valid") }
+    
+    print(p)
+    if(! is.na(name)){ dev.off() }
+    if (returnp) { return(p) }
 }
 
 
 plot.bolddf.stat <- function(bolddf, stat, name=NA, height=0, width=0, 
-        nulldist=FALSE, geom="boxplot"){
+        nulldist=FALSE, geom="boxplot", returnp=FALSE){
 # For every voxel plot the named stat, as a boxplot, coloring based on cond.
 # NOTE:
 # Has two modes.  If name is NA, returns a ggplot() pointer.
 # If it is a char string, save the result to file of that name.
 
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
-
+    # else { dev.new(width=width, height=height) }
+    
     print("Creating stats.")
-    bolddf <- bolddf.stats(bolddf, stat)
+    bolddf <- bolddf.stat(bolddf, stat)
 
     # Create the nulldist data?
     if (nulldist) {
@@ -117,42 +180,50 @@ plot.bolddf.stat <- function(bolddf, stat, name=NA, height=0, width=0,
         ylab(paste("Distribution of dataname ", stat, "'s", sep="")) + 
         xlab("Voxel") + 
         theme(
+            plot.background = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.border = element_blank(),
+            panel.background = element_blank(),
             axis.text.y=element_blank(),
-            axis.ticks.y=element_blank()
+            axis.ticks.y=element_blank(),
+            strip.text.y = element_text(angle=0)
         ) + 
         coord_flip()
     
+    print(p)
     # Plot or return p
-    if(! is.na(name)){
-        print(p)    
+    if(! is.na(name)){        
         dev.off()
     }
-    else{ return(p) }
+    if (returnp) { return(p) }
 }
 
 
 plot.bolddf.allstats <- function(bolddf, name=NA, height=0, width=0, 
-        nulldist=FALSE, geom="boxplot"){
+        nulldist=FALSE, geom="boxplot", returnp=FALSE){
 # Plot all the stats available in the stat.timecourse function,
 # saving each as a page inside the same pdf file.
 
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
-
-    statsnames <- c('mean', 'var', 'diff', 'median', 'time_to_max')
+    # else { dev.new(width=width, height=height) }
+    
+    statsnames <- c(mean, var, diff, median, time.to.max)
     for(statname in statsnames){
         print(statname)
         p <- bolddf.stat(bolddf, statname, NA, height, width, nulldist, geom)  
         print(p)    
     }
-
-    dev.off()
+    
+    if (! is.na(name)) { dev.off() }
+    if (returnp) { return(p) }
 }
 
-plot.bolddf.rmsdifference <- function(bolddf, stat, name=NA, height=0, width=0){
-# TODO doc....
-
+plot.bolddf.rmsdifference <- function(bolddf, stat, name=NA, height=0, width=0,
+            returnp=FALSE){
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
-
+    # else { dev.new(width=width, height=height) }
+    
     # Are there enough cond?
     conds <- as.character(unique(bolddf$cond))
     if (length(conds) <= 2) {
@@ -191,34 +262,37 @@ plot.bolddf.rmsdifference <- function(bolddf, stat, name=NA, height=0, width=0){
         }, 
         condpairs)
 
-    print(str(bolddf_rmsdiff))
-
     # Finally we plot...
     p <- ggplot(data=bolddf_rmsdiff, aes(x=voxel, y=data, 
         fill=condpair, colour=condpair)) + 
         geom_boxplot(alpha=0.8, notch=FALSE, outlier.colour="light grey") + 
         theme_bw() +
         theme(
+            plot.background = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.border = element_blank(),
+            panel.background = element_blank(),
             axis.text.y=element_blank(),
-            axis.ticks=element_blank(),
-            axis.title.y=element_blank()
+            axis.ticks.y=element_blank(),
+            strip.text.y = element_text(angle=0)
         ) + 
         ylab(paste("RMS ", stat)) +
         ylim(0,0.002) +
         coord_flip()
 
-    if(! is.na(name)){
-        print(p)    
-        dev.off()
-    }
-    else{ return(p) }
+    print(p)
+    if(! is.na(name)){ dev.off() }
+    if (returnp) { return(p) }
 }
 
 
 .pdf.device.setup <- function(name, height, width){
-       if((height > 0) && (width > 0)){
-            pdf(file=name, height=height, width=width)
-        } else {
-            pdf(file=name)  ## Use the defaults   
+    cat("Using pdf().")
+
+    if((height > 0) && (width > 0)){
+        pdf(file=name, height=height, width=width)
+    } else {
+        pdf(file=name)  ## Use the defaults   
     }
 }

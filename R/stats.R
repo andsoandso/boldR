@@ -1,11 +1,30 @@
 library("plyr")
 library("reshape2")
 
+# Some useful functions
+# that take only arrays.
+time.to.max <- function(x){
+    idx <- 0:(length(x)-1)
+    idx[max(x) == x]
+}
+
+diff <- function(x){  
+    ranges <- range(x)
+    ranges[2] - ranges[1] 
+}
+
 # ----
 # Private helper fns.
-# Creates the Null dists
-.puggle <- function(bolddf, statfn){
-
+.puggle <- function(bolddf, stat){
+# Returns a bolddf full of stats following a bootstraping.
+#
+# A ugly imperative (but hopefully correct) implemention of a 
+# bootstrap sampler. 
+#
+# Samples are drawn by sampling each joint of dataname+cond.  
+# By sampling this way, rather than on the data directly, I 
+# maintain trial-level timecourses while creating a NULL for comparison
+# in the plots this fn is used in.
     conds <- as.character(bolddf$cond)
     cond_levels <- unique(conds)
 
@@ -27,7 +46,7 @@ library("reshape2")
 
     # Use the group_id to swap groups randomly
     id_code <- unique(group_id)
-    shuffled_id_code <- sample(id_code)
+    shuffled_id_code <- sample(id_code, replace=TRUE)
     newbolddf <- bolddf
     for (id in id_code) {
         maskout <- group_id == id
@@ -43,77 +62,42 @@ library("reshape2")
         # .print_bolddf_info(bolddf[maskout,])
         newbolddf$data[maskin] <- bolddf$data[maskout]
     }
-    bolddf_null <- statfn(newbolddf)
+    bolddf_null <- bolddf.stat(newbolddf, stat)
 }
 
-# Returns the appropriate statistic function.
-.get.statfn <- function(stat){
-    if(stat == "mean"){
-        statfn <- function(bolddf){
-            meandf <- ddply(
-                bolddf, 
-                .(voxel, dataname, cond), 
-                function(bolddf) { mean(bolddf$data) }) 
-        }
-    } else if(stat == "median") {
-        statfn <- function(bolddf){
-            meandf <- ddply(
-                bolddf, 
-                .(voxel, dataname, cond),
-                function(bolddf){ median(bolddf$data) })
-        }
-    } else if(stat == "var"){
-        statfn <- function(bolddf){
-            vardf <- ddply(
-                bolddf, 
-                .(voxel, dataname, cond), 
-                function(bolddf){ var(bolddf$data) })
-        }
-    } else if(stat == "time_to_max"){
-        statfn <- function(bolddf){
-            ttmdf <- ddply(
-                bolddf, 
-                .(voxel, dataname, cond), 
-                function(bolddf){
-                    idx <- 0:(length(bolddf$data)-1)
-                    idx[max(bolddf$data) == bolddf$data]
-                })
-        }
-    } else if(stat == "diff"){
-        statfn <- function(bolddf){
-            diffdf <- ddply(
-                bolddf, 
-                .(voxel, dataname, cond), 
-                function(bolddf){  
-                    ranges <- range(bolddf$data)
-                    ranges[2] - ranges[1] 
-                })
-        }
-    } else {
-        print("stat not understood.")
-    }
-    statfn
+
+make.stat.boldf <- function(stat) {
+# NOTE: stat must a be stat(x) signature function.
+# Converts any stat function that takes a vextor or list
+# into a function that works magically with boldf objects.
+    function(bolddf) { stat(bolddf$data) }
 }
 
-bolddf.stats <- function(bolddf, stat){
-    bolddf_stat <- (.get.statfn(stat))(bolddf)
+bolddf.stat <- function(bolddf, stat){
+# NOTE: stat must a be stat(x) signature function.
+# Slice along bolddf$index calculating stats and return
+# them in a bolddf.
+    bolddf_stat <-  ddply(
+            bolddf,
+            .(voxel, dataname, cond), 
+            make.stat.bolddf(stat))  ## Wont have an index, add one...
     bolddf_stat[["index"]] <- rep(1, nrow(bolddf_stat))
     colnames(bolddf_stat) <- c("voxel", "dataname", "cond", "data", "index")
     bolddf_stat
 }
 
 bolddf.nulldist <- function(bolddf, stat, ninter=100, seed=42){
+# Generate voxel level null distributions for stat.
     set.seed(seed)
 
-    statfn <- .get.statfn(stat)
-    bolddf_null <- ddply(bolddf, .(voxel), .puggle, statfn)
+    bolddf_null <- ddply(bolddf, .(voxel), .puggle, stat)
     colnames(bolddf_null) <- c("voxel", "dataname", "cond", "data")
     for (i in 1:(ninter-1)){
         # Generate this iterations nulls dist samples, 
         # and average them with the rest.
 
         # Create this iters data
-        bolddf_null_i <- ddply(bolddf, .(voxel), .puggle, statfn)
+        bolddf_null_i <- ddply(bolddf, .(voxel), .puggle, stat)
         colnames(bolddf_null_i) <- c("voxel", "dataname", "cond", "data")
 
         # Setup update vars 
@@ -131,3 +115,18 @@ bolddf.nulldist <- function(bolddf, stat, ninter=100, seed=42){
     bolddf_null
 }
 
+bolddf.binarize <- function(bolddf, threshold){
+# Convert invididual TRs (in bolddf$data) into binary coding
+# based on threshold.
+    bolddf$data <- aaply(
+            bolddf$data, 1, 
+            function(x) { 
+                if (is.na(x) || is.null(x)) { return(0) }
+                else if (x >= threshold) { return(1) } 
+                else { return(0)} })
+    bolddf
+}
+
+bolddf.stat.binarize <- function(bolddf, stat, threshold){
+    bolddf.binarize(bolddf.stats(bolddf, stat), threshold)
+}
