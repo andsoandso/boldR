@@ -2,7 +2,7 @@ library("ggplot2")
 library("reshape2")
 
 plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA, 
-        height=0, width=0, returnp=FALSE){
+        height=0, width=0, returnp=FALSE, title=NA){
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
     # else { dev.new(width=width, height=height) }
 
@@ -13,7 +13,6 @@ plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA,
             scale_fill_continuous(low="black", high="pink") +
 
             facet_grid(dataname~cond) +
-            
             ylab("Voxel") +
             xlab("Index") +
             theme_bw() + 
@@ -22,6 +21,8 @@ plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA,
                 axis.ticks.y=element_blank(),
                 strip.text.y = element_text(angle=0)
             )
+            if (! is.na(title)) { p <- p + ggtitle(title) }
+
         print(p)
     } else if (seperate_by == "dataname") {
         for (rname in unique(as.character(bolddf$dataname))){
@@ -44,6 +45,8 @@ plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA,
                 axis.ticks.y=element_blank(),
                 strip.text.y = element_text(angle=0)
             )
+            if (! is.na(title)) { p <- p + ggtitle(title) }
+
             print(p)
         }
     } else {
@@ -54,7 +57,7 @@ plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA,
 }
 
 plot.bolddf.tc <- function(bolddf, name=NA, height=0, width=0, 
-            returnp=FALSE){
+            returnp=FALSE, title=NA){
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
     # else { dev.new(width=width, height=height) }
     
@@ -75,14 +78,14 @@ plot.bolddf.tc <- function(bolddf, name=NA, height=0, width=0,
                 axis.ticks.y=element_blank(),
                 strip.text.y = element_text(angle=0)
             ) 
-    
+    if (! is.na(title)) { p <- p + ggtitle(title) }
     print(p)
     if(! is.na(name)){ dev.off() }
     if (returnp) { return(p) }
 }
 
 plot.bolddf.tcpoint <- function(bolddf, name=NA, height=0, width=0, 
-        returnp=FALSE){
+        returnp=FALSE, title=NA){
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
     # else { dev.new(width=width, height=height) }
     
@@ -103,7 +106,8 @@ plot.bolddf.tcpoint <- function(bolddf, name=NA, height=0, width=0,
                 axis.ticks.y=element_blank(),
                 strip.text.y = element_text(angle=0)
             )
-    
+    if (! is.na(title)) { p <- p + ggtitle(title) }
+
     print(p)
     if(! is.na(name)){ dev.off() }
     if (returnp) { return(p) }
@@ -111,7 +115,7 @@ plot.bolddf.tcpoint <- function(bolddf, name=NA, height=0, width=0,
 
 
 plot.bolddf.boxplot <- function(bolddf, name=NA, seperate_by=NA, 
-        height=0, width=0, returnp=FALSE){
+        height=0, width=0, returnp=FALSE, title=NA){
 # Plots timecourses for each voxel in a grid. Conds are separatly colored.
 
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
@@ -126,6 +130,8 @@ plot.bolddf.boxplot <- function(bolddf, name=NA, seperate_by=NA,
     else if (seperate_by == "cond") {p <- p + facet_grid(voxel~cond)}
     else { stop("seperate_by was not valid") }
     
+    if (! is.na(title)) { p <- p + ggtitle(title) }
+    
     print(p)
     if(! is.na(name)){ dev.off() }
     if (returnp) { return(p) }
@@ -133,7 +139,7 @@ plot.bolddf.boxplot <- function(bolddf, name=NA, seperate_by=NA,
 
 
 plot.bolddf.stat <- function(bolddf, stat, name=NA, height=0, width=0, 
-        nulldist=FALSE, geom="boxplot", returnp=FALSE){
+        nulldist=FALSE, geom="boxplot", returnp=FALSE, title=NA){
 # For every voxel plot the named stat, as a boxplot, coloring based on cond.
 # NOTE:
 # Has two modes.  If name is NA, returns a ggplot() pointer.
@@ -191,6 +197,8 @@ plot.bolddf.stat <- function(bolddf, stat, name=NA, height=0, width=0,
         ) + 
         coord_flip()
     
+    if (! is.na(title)) { p <- p + ggtitle(title) }
+
     print(p)
     # Plot or return p
     if(! is.na(name)){        
@@ -201,7 +209,7 @@ plot.bolddf.stat <- function(bolddf, stat, name=NA, height=0, width=0,
 
 
 plot.bolddf.allstats <- function(bolddf, name=NA, height=0, width=0, 
-        nulldist=FALSE, geom="boxplot", returnp=FALSE){
+        nulldist=FALSE, geom="boxplot", returnp=FALSE, title=NA){
 # Plot all the stats available in the stat.timecourse function,
 # saving each as a page inside the same pdf file.
 
@@ -220,7 +228,7 @@ plot.bolddf.allstats <- function(bolddf, name=NA, height=0, width=0,
 }
 
 plot.bolddf.rmsdifference <- function(bolddf, stat, name=NA, height=0, width=0,
-            returnp=FALSE){
+            returnp=FALSE, title=NA){
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
     # else { dev.new(width=width, height=height) }
     
@@ -280,6 +288,8 @@ plot.bolddf.rmsdifference <- function(bolddf, stat, name=NA, height=0, width=0,
         ylab(paste("RMS ", stat)) +
         ylim(0,0.002) +
         coord_flip()
+
+    if (! is.na(title)) { p <- p + ggtitle(title) }
 
     print(p)
     if(! is.na(name)){ dev.off() }
