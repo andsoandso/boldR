@@ -4,7 +4,7 @@
 # following colnames: ("voxel", "dataname", "cond", "index", "value").
 create.bolddf <- function(df, datarange, index, cond, dataname) {
 	
-	bolddf <- df[ ,datarange]          ## Copy over the voxel data
+	bolddf <- as.data.frame(df[ ,datarange])  ## Copy over the voxel data
 	bolddf[["index"]] <- df[[index]]   ## Then the metadata
 	bolddf[["cond"]] <- df[[cond]]
 	bolddf[["dataname"]] <- df[[dataname]]
@@ -14,4 +14,15 @@ create.bolddf <- function(df, datarange, index, cond, dataname) {
     bolddf[["data"]] <- as.numeric(bolddf[["data"]])  ## Ensure not str
     
 	bolddf
+}
+
+
+read.boldfs <- function(files, datarange, index, cond, dataname) {
+    bolddf <- NULL
+    for (file in files){
+        bolddf <- rbind(bolddf,
+                create.bolddf(read.table(file, sep=",", header=TRUE), 
+                datarange=datarange, index=index, cond=cond, dataname=dataname))
+    }
+    bolddf
 }
