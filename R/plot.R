@@ -56,28 +56,47 @@ plot.bolddf.homogeneity <- function(bolddf, name, seperate_by=NA,
     if (returnp) {return(p) }
 }
 
+plot.bolddf.mediantc <- function(bolddf, name=NA, height=0, width=0, 
+            returnp=FALSE, title=NA){
+
+    if(! is.na(name)){ .pdf.device.setup(name, height, width) }
+    # else { dev.new(width=width, height=height) }
+    
+    p <- ggplot(data=bolddf, aes(x=index, y=data, colour=cond, fill=cond))
+    p <- p + stat_summary(fun.y=median, geom="line") +
+        facet_grid(voxel~., scales = "free_y") +
+        ylab("BOLD signal (AU)") + xlab("Time (TR)") + theme_bw() +
+        scale_x_continuous(breaks=1:max(bolddf$index))   
+
+    if (! is.na(title)) { p <- p + ggtitle(title) }
+    print(p)
+    if(! is.na(name)){ dev.off() }
+    if (returnp) { return(p) }
+}
+
+
 plot.bolddf.tc <- function(bolddf, name=NA, height=0, width=0, 
             returnp=FALSE, title=NA){
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
     # else { dev.new(width=width, height=height) }
     
     p <- ggplot(data=bolddf, aes(x=index, y=data, colour=cond, group=dataname)) +
-            geom_line(alpha=0.25) + 
-            facet_grid(voxel~cond) +
-            ylab("BOLD signal (AU)") + xlab("Time (TR)") + theme_bw() +
-            scale_x_continuous(breaks=1:max(bolddf$index)) +
-            
-            # Strip off all the boxes
-            theme(
-                plot.background = element_blank(),
-                # panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),
-                panel.border = element_blank(),
-                panel.background = element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks.y=element_blank(),
-                strip.text.y = element_text(angle=0)
-            ) 
+        geom_line(alpha=0.25) + 
+        facet_grid(voxel~cond) +
+        ylab("BOLD signal (AU)") + xlab("Time (TR)") + theme_bw() +
+        scale_x_continuous(breaks=1:max(bolddf$index)) +
+        
+        # Strip off all the boxes
+        theme(
+            plot.background = element_blank(),
+            # panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.border = element_blank(),
+            panel.background = element_blank(),
+            axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            strip.text.y = element_text(angle=0)
+        ) 
     if (! is.na(title)) { p <- p + ggtitle(title) }
     print(p)
     if(! is.na(name)){ dev.off() }
@@ -90,22 +109,22 @@ plot.bolddf.tcpoint <- function(bolddf, name=NA, height=0, width=0,
     # else { dev.new(width=width, height=height) }
     
     p <- ggplot(data=bolddf, aes(x=index, y=data, colour=cond)) +
-            geom_point(alpha=0.25) +
-            facet_grid(voxel~cond) +
-            ylab("BOLD signal (AU)") + xlab("Time (TR)") + theme_bw() + 
-            scale_x_continuous(breaks=1:max(bolddf$index)) +
+        geom_point(alpha=0.25) +
+        facet_grid(voxel~cond) +
+        ylab("BOLD signal (AU)") + xlab("Time (TR)") + theme_bw() + 
+        scale_x_continuous(breaks=1:max(bolddf$index)) +
 
-            # Strip off all the boxes
-            theme(
-                plot.background = element_blank(),
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),
-                panel.border = element_blank(),
-                panel.background = element_blank(),
-                axis.text.y=element_blank(),
-                axis.ticks.y=element_blank(),
-                strip.text.y = element_text(angle=0)
-            )
+        # Strip off all the boxes
+        theme(
+            plot.background = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.border = element_blank(),
+            panel.background = element_blank(),
+            axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            strip.text.y = element_text(angle=0)
+        )
     if (! is.na(title)) { p <- p + ggtitle(title) }
 
     print(p)
