@@ -6,8 +6,12 @@ create.bolddf <- function(df, datarange, index, cond, dataname) {
 	
 	bolddf <- as.data.frame(df[ ,datarange])  ## Copy over the voxel data
 	bolddf[["index"]] <- df[[index]]   ## Then the metadata
-	bolddf[["cond"]] <- df[[cond]]
-	bolddf[["dataname"]] <- df[[dataname]]
+    bolddf[["dataname"]] <- df[[dataname]]
+    
+    nnewcond <- as.character(df[[cond]])
+    nnewcond[nnewcond == "NA"] <- "no_label"
+    nnewcond[nnewcond == "NaN"] <- "no_label"
+	bolddf[["cond"]] <- as.factor(nnewcond)
 	
 	bolddf <- melt(bolddf, id.var = c("dataname", "cond", "index"))
 	colnames(bolddf) <- c("dataname", "cond", "index", "voxel", "data")
