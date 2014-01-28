@@ -4,15 +4,19 @@
 # following colnames: ("voxel", "dataname", "cond", "index", "value").
 create.bolddf <- function(df, datarange, index, cond, dataname) {
 	
-	bolddf <- as.data.frame(df[ ,datarange])  ## Copy over the voxel data
-	bolddf[["index"]] <- df[[index]]   ## Then the metadata
+    # Copy over the voxel data
+    # Then the metadata
+	bolddf <- as.data.frame(df[ ,datarange])
+	bolddf[["index"]] <- df[[index]]
     bolddf[["dataname"]] <- df[[dataname]]
     
+    # Convert NA and NaN to no_label along the way
     nnewcond <- as.character(df[[cond]])
     nnewcond[nnewcond == "NA"] <- "no_label"
     nnewcond[nnewcond == "NaN"] <- "no_label"
 	bolddf[["cond"]] <- as.factor(nnewcond)
 	
+    # Combine voxels, keeping the metadata tied
 	bolddf <- melt(bolddf, id.var = c("dataname", "cond", "index"))
 	colnames(bolddf) <- c("dataname", "cond", "index", "voxel", "data")
     bolddf[["data"]] <- as.numeric(bolddf[["data"]])  ## Ensure not str
