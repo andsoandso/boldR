@@ -175,7 +175,7 @@ plot.bolddf.tcpoint <- function(bolddf, name=NA, height=0, width=0,
 
 plot.bolddf.boxplot <- function(bolddf, name=NA, seperate_by=NULL, 
         height=0, width=0, returnp=FALSE, title=NA, drop_cond=NULL, 
-        notch=FALSE){
+        notch=FALSE, defcolor=FALSE){
 # Plots timecourses for each voxel in a grid. Conds are separatly colored.
 
     if(! is.na(name)){ .pdf.device.setup(name, height, width) }
@@ -191,14 +191,17 @@ plot.bolddf.boxplot <- function(bolddf, name=NA, seperate_by=NULL,
     if (is.null(seperate_by)) { 
         p <- ggplot(data=bolddf, aes(x=factor(
                     index), y=data, colour=cond, fill=cond)) + 
-            scale_colour_brewer(palette="BrBG") +
-            scale_fill_brewer(palette="BrBG") + 
             facet_grid(voxel~., scales = "free_y")
     } else if (seperate_by == "cond") {
         p <- ggplot(data=bolddf, aes(x=factor(index), y=data)) +
                     facet_grid(voxel~cond, scales = "free_y")
     } else { 
         stop("seperate_by was not valid") 
+    }
+
+    if (! defcolor) {
+        p <- p + scale_colour_brewer(palette="BrBG") +
+        scale_fill_brewer(palette="BrBG") 
     }
 
     p <- p + geom_boxplot(alpha=0.5, outlier.colour="light grey", notch=notch)

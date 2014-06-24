@@ -1,0 +1,75 @@
+# Plot experiments w/ FaceHouse data
+```{r}
+load_all("~/src/boldR/");
+```
+
+## Motor
+First let's try the respXtime data
+
+## RT
+First up is the left caudate
+```{r}
+eva_lcau <- create.bolddf(
+    read.table("/data/data2/meta_accumulate/fh/mvpa/fh_rt_eva_timecourse_left_caudate.csv", 
+                    sep=",", header=TRUE), datarange=1:161,
+                    index="timecourse_index", 
+                    cond="reaction_times", dataname="roinames");
+```
+
+Test plot for tcpoint:
+```{r}
+plot.bolddf.tcpoint(bolddf=eva_lcau, 
+                    name="/data/data2/meta_accumulate/fh/mvpa/plots/tcpoint_eva_rt_lcaudate.pdf",          
+                    height=50, width=5);
+```
+
+Test plot for tc:
+```{r}
+plot.bolddf.tc(bolddf=eva_lcau,
+                    name="/data/data2/meta_accumulate/fh/mvpa/plots/tc_eva_rt_lcaudate.pdf",          
+                    height=50, width=5);
+```
+
+Let's also do the insula too. Plot tc and tcpoint again.
+```{r}
+ins_nvox <- 431;  ## Looked ahead of time....
+eva_ins <- create.bolddf(
+                    read.table("/data/data2/meta_accumulate/fh/mvpa/fh_rt_eva_timecourse_insula.csv", 
+                            sep=",", header=TRUE), 
+                    datarange=1:ins_nvox,
+                    index="timecourse_index", 
+                    cond="reaction_times", dataname="roinames");
+
+plot.bolddf.tcpoint(bolddf=eva_ins, 
+                    name="/data/data2/meta_accumulate/fh/mvpa/plots/tcpoint_eva_rt_insula.pdf",          
+                    height=140, width=5);
+plot.bolddf.tc(bolddf=eva_ins,
+                    name="/data/data2/meta_accumulate/fh/mvpa/plots/tc_eva_rt_insula.pdf",          
+                    height=140, width=5);
+```
+
+## Fun with PCA - motor
+```{r}
+tcomp_resp <- create.bolddf(
+        read.table(
+        "/data/data2/meta_accumulate/fh/mvpa/pca_time_respXtime_rfx_mask_resp_Xtrialcomponents.csv",
+        sep=",", header=TRUE), 
+        datarange=1:8, index="index", cond="cond", dataname="dataname");
+
+plot.bolddf.tc(bolddf=tcomp_resp, 
+        name="/data/data2/meta_accumulate/fh/mvpa/plots/tc_pca_time_respXtime_Xtrialcomponents.pdf",
+        height=3, width=4.5)
+````
+
+```{r}
+tcomp_lcau <- create.bolddf(
+        read.table(
+        "/data/data2/meta_accumulate/fh/mvpa/pca_time_left_caudate_exp_Xtrialcomponents.csv",
+        sep=",", header=TRUE),
+        datarange=1:8, index="index", cond="cond", dataname="dataname");
+
+plot.bolddf.tc(bolddf=tcomp_lcau, 
+        name="/data/data2/meta_accumulate/fh/mvpa/plots/tc_pca_time_lcau_Xtrialcomponents.pdf",
+        height=3, width=4.5)
+```
+
